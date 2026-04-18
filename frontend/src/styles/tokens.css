@@ -1,0 +1,43 @@
+:root {
+  /* ── Colours ────────────────────────────────────────────────────────────── */
+  --color-bg:        oklch(8% 0.01 265);
+  --color-surface:   oklch(12% 0.012 265);
+  --color-surface-2: oklch(16% 0.018 265);
+  --color-border:    oklch(22% 0.015 265);
+  --color-gold:      oklch(72% 0.14 85);
+  --color-gold-dim:  oklch(50% 0.08 85);
+  --color-bull:      oklch(65% 0.18 145);
+  --color-bear:      oklch(60% 0.20 25);
+  --color-text:      oklch(92% 0.01 85);
+  --color-muted:     oklch(55% 0.02 85);
+
+  /* ── Spacing ────────────────────────────────────────────────────────────── */
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-6:  1.5rem;
+  --space-8:  2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* ── Typography scale ───────────────────────────────────────────────────── */
+  --text-xs:   0.75rem;
+  --text-sm:   0.875rem;
+  --text-base: 1rem;
+  --text-lg:   1.125rem;
+  --text-xl:   1.25rem;
+  --text-2xl:  1.5rem;
+  --text-3xl:  2rem;
+
+  /* ── Border radius ──────────────────────────────────────────────────────── */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  /* ── Motion ─────────────────────────────────────────────────────────────── */
+  --duration-fast:   150ms;
+  --duration-normal: 300ms;
+  --ease-out-expo:   cubic-bezier(0.16, 1, 0.3, 1);
+}

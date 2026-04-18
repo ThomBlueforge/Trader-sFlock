@@ -1,0 +1,33 @@
+/* Applied after font variables are injected by next/font in layout.tsx */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-text);
+}
+
+h1 { font-size: var(--text-3xl); }
+h2 { font-size: var(--text-2xl); }
+h3 { font-size: var(--text-xl); }
+h4 { font-size: var(--text-lg); }
+
+p {
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+small, .text-sm { font-size: var(--text-sm); }
+.text-xs        { font-size: var(--text-xs); }
+.text-muted     { color: var(--color-muted); }
+.text-gold      { color: var(--color-gold); }
+.text-bull      { color: var(--color-bull); }
+.text-bear      { color: var(--color-bear); }
+
+.mono {
+  font-family: var(--font-mono), 'JetBrains Mono', monospace;
+  font-size: var(--text-sm);
+}
+
+.font-bold   { font-weight: 700; }
+.font-medium { font-weight: 500; }
