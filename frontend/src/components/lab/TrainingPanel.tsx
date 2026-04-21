@@ -115,7 +115,7 @@ export default function TrainingPanel({ agent, onComplete }: TrainingPanelProps)
   const isCancelling              = globalTask?.status === 'cancelling'
 
   const [progress,   setProgress]  = useState<number | null>(null)
-  const [metrics,    setMetrics]   = useState<Metrics | null>(agent.metrics ?? null)
+  const [metrics,    setMetrics]   = useState<Metrics | null>((agent.metrics ?? null) as Metrics | null)
   const [error,      setError]     = useState<string | null>(null)
   const [training,   setTraining]  = useState(false)
   const [optimizing, setOptimizing]= useState(false)
@@ -128,7 +128,7 @@ export default function TrainingPanel({ agent, onComplete }: TrainingPanelProps)
 
   // Update metrics if agent prop changes (e.g. after refresh)
   useEffect(() => {
-    if (agent.metrics) setMetrics(agent.metrics)
+    if (agent.metrics) setMetrics(agent.metrics as unknown as Metrics)
   }, [agent.metrics])
 
   const handleEvent = useCallback(

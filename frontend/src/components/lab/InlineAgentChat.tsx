@@ -85,7 +85,7 @@ export default function InlineAgentChat({ step, form, allFeatures, onApply }: Pr
     if (!input.trim() || streaming) return
     const text = input.trim()
     setInput('')
-    await send(text, step, form as Parameters<typeof send>[2], allFeatures)
+    await send(text, step, form as unknown as Parameters<typeof send>[2], allFeatures)
   }
 
   const handleConnectKey = async () => {
@@ -190,7 +190,7 @@ export default function InlineAgentChat({ step, form, allFeatures, onApply }: Pr
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {suggestions.map(s => (
-                    <button key={s} onClick={() => send(s, step, form as Parameters<typeof send>[2], allFeatures)}
+                    <button key={s} onClick={() => send(s, step, form as unknown as Parameters<typeof send>[2], allFeatures)}
                       style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)',
                         borderRadius: 'var(--radius-sm)', padding: '5px 10px', cursor: 'pointer',
                         fontSize: 'var(--text-xs)', color: 'var(--color-muted)', textAlign: 'left',

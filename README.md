@@ -6,11 +6,38 @@ A local-first, ML-powered signal platform for gold futures (GC=F). Build, train 
 
 ---
 
+## Getting Started
+
+### No coding experience? Start here.
+
+**Step 1 — Install Docker Desktop** (one-time, free)
+
+Docker is the only thing you need to install. It packages the entire app so nothing else is required.
+
+→ Download: https://www.docker.com/products/docker-desktop/
+
+Once installed, open Docker Desktop and wait for it to finish starting (the whale icon in your menu bar stops animating).
+
+**Step 2 — Start the app**
+
+Double-click **`Start Trader's Flock.command`** in this folder.
+
+A Terminal window will open and handle everything automatically — building the app, starting it, and opening your browser.
+The **first launch takes 3–5 minutes** while it downloads and compiles the app. Every subsequent start takes under 30 seconds.
+
+> **First time only:** macOS may block the file. Right-click it → Open → Open to confirm.
+
+**Step 3 — Stop the app**
+
+Double-click **`Stop Trader's Flock.command`**.
+
+Your data and trained agents are saved between sessions.
+
+---
+
 ## Table of Contents
 
-- [Prerequisites](#prerequisites)
-- [Quick Start — Docker](#quick-start--docker)
-- [Manual Setup](#manual-setup)
+- [Developer Setup](#developer-setup)
 - [Environment Variables](#environment-variables)
 - [First Run Walkthrough](#first-run-walkthrough)
 - [App Pages](#app-pages)
@@ -21,7 +48,9 @@ A local-first, ML-powered signal platform for gold futures (GC=F). Build, train 
 
 ---
 
-## Prerequisites
+## Developer Setup
+
+### Prerequisites
 
 | Tool | Version | Notes |
 |------|---------|-------|
@@ -29,11 +58,9 @@ A local-first, ML-powered signal platform for gold futures (GC=F). Build, train 
 | Node.js | 20+ | For manual frontend setup |
 | Docker + Compose | any recent | Easiest option — covers both services |
 
----
+### Docker (recommended)
 
-## Quick Start — Docker
-
-The fastest way to get running. One command starts both backend and frontend:
+One command starts both backend and frontend:
 
 ```bash
 docker compose up

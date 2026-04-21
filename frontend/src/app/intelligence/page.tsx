@@ -337,7 +337,7 @@ export default function IntelligencePage() {
           <ParameterHeatmap
             cells={sweepCells}
             onSelect={(cell) => {
-              window.location.href = `/lab?horizon=${cell.horizon}&threshold=${cell.threshold}&train_window=${cell.train_window}`
+              window.location.href = `/lab?agent_id=${sweepAgentId}&horizon=${cell.horizon}&threshold=${cell.threshold}&train_window=${cell.train_window}`
             }}
           />
         </div>

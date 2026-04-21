@@ -80,3 +80,6 @@ next-env.d.ts
 *.pem
 *.key
 *.cert
+*.db-shm
+*.db-wal
+*.db

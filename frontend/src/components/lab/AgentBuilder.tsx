@@ -337,7 +337,7 @@ export default function AgentBuilder({ onCreated, onUpdated, editAgent }: AgentB
       {/* AI co-pilot — appears on every step */}
       <InlineAgentChat
         step={step}
-        form={form}
+        form={form as unknown as Record<string, unknown>}
         allFeatures={allFeats}
         onApply={handleAIConfig}
       />

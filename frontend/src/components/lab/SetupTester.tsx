@@ -225,7 +225,7 @@ export default function SetupTester({ agent }: SetupTesterProps) {
     setError('')
     setResult(null)
     try {
-      const r = await api.training.setupTest(agent.id, buildBody()) as SetupResult
+      const r = await api.training.setupTest(agent.id, buildBody()) as unknown as SetupResult
       setResult(r)
     } catch (err) {
       setError(String(err))

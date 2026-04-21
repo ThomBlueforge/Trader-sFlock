@@ -6,6 +6,11 @@ export const CLAUDE_MODEL        = 'claude-sonnet-4-6'
 export const CONFIG_BLOCK_START  = '```config_json'
 export const CONFIG_BLOCK_END    = '```'
 
+export interface Message {
+  role:    'user' | 'assistant'
+  content: string
+}
+
 // Required for direct browser → Anthropic API calls (bypasses CORS restriction)
 const BROWSER_HEADERS = {
   'anthropic-version':                  '2023-06-01',

@@ -99,9 +99,9 @@ export default function AssistantPage() {
         {/* Chat column */}
         <div
           className="card"
-          style={{ padding: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+          style={{ padding: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', flex: 1 }}
         >
-          <StrategyChat onConfig={setLatestConfig} style={{ flex: 1 }} />
+          <StrategyChat onConfig={setLatestConfig} />
         </div>
 
         {/* Preview column */}

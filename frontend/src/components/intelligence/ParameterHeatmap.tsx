@@ -16,8 +16,8 @@ const REGIME_COLORS: Record<string, string> = {
 
 export default function ParameterHeatmap({ cells, onSelect }: ParameterHeatmapProps) {
   const { horizons, thresholds, grid, minS, maxS } = useMemo(() => {
-    const horizons   = [...new Set(cells.map((c) => c.horizon))].sort((a, b) => a - b)
-    const thresholds = [...new Set(cells.map((c) => c.threshold))].sort((a, b) => a - b)
+    const horizons   = Array.from(new Set(cells.map((c) => c.horizon))).sort((a, b) => a - b)
+    const thresholds = Array.from(new Set(cells.map((c) => c.threshold))).sort((a, b) => a - b)
 
     const sharpes = cells.map((c) => c.sharpe ?? -99).filter((s) => s > -99)
     const minS    = Math.min(...sharpes, -1)
@@ -92,28 +92,42 @@ export default function ParameterHeatmap({ cells, onSelect }: ParameterHeatmapPr
         {/* Cells */}
         {thresholds.map((t, yi) =>
           horizons.map((h, xi) => {
-            const cell   = grid[`${h}:${t}`]
-            const sharpe = cell?.sharpe ?? null
-            const bg     = sharpeToColor(sharpe)
-            const x      = PAD_L + xi * CELL_W
-            const y      = PAD_T + yi * CELL_H
+            const cell     = grid[`${h}:${t}`]
+            const sharpe   = cell?.sharpe ?? null
+            const nTrades  = cell?.n_trades ?? 0
+            const tooFew   = nTrades < 5
+            const bg       = sharpeToColor(sharpe)
+            const x        = PAD_L + xi * CELL_W
+            const y        = PAD_T + yi * CELL_H
+            const clickable = cell && !cell.error && !tooFew
             return (
               <g
                 key={`${h}:${t}`}
-                style={{ cursor: cell && !cell.error ? 'pointer' : 'default' }}
-                onClick={() => cell && !cell.error && onSelect?.(cell)}
+                style={{ cursor: clickable ? 'pointer' : 'not-allowed' }}
+                onClick={() => clickable && onSelect?.(cell)}
               >
                 <rect
                   x={x + 2} y={y + 2}
                   width={CELL_W - 4} height={CELL_H - 4}
                   rx={4}
                   fill={bg}
-                  fillOpacity={0.8}
+                  fillOpacity={tooFew ? 0.25 : 0.8}
                 />
+                {tooFew && (
+                  <rect
+                    x={x + 2} y={y + 2}
+                    width={CELL_W - 4} height={CELL_H - 4}
+                    rx={4}
+                    fill="none"
+                    stroke="rgba(255,255,255,0.15)"
+                    strokeWidth={1}
+                    strokeDasharray="3 2"
+                  />
+                )}
                 <text
-                  x={x + CELL_W / 2} y={y + CELL_H / 2 - 4}
+                  x={x + CELL_W / 2} y={y + CELL_H / 2 - 8}
                   textAnchor="middle"
-                  fill="white"
+                  fill={tooFew ? 'rgba(255,255,255,0.35)' : 'white'}
                   fontSize={11}
                   fontWeight={700}
                 >
@@ -121,21 +135,29 @@ export default function ParameterHeatmap({ cells, onSelect }: ParameterHeatmapPr
                 </text>
                 {cell?.win_rate != null && (
                   <text
-                    x={x + CELL_W / 2} y={y + CELL_H / 2 + 10}
+                    x={x + CELL_W / 2} y={y + CELL_H / 2 + 4}
                     textAnchor="middle"
-                    fill="rgba(255,255,255,0.7)"
+                    fill={tooFew ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.7)'}
                     fontSize={9}
                   >
                     WR {(cell.win_rate * 100).toFixed(0)}%
                   </text>
                 )}
+                <text
+                  x={x + CELL_W / 2} y={y + CELL_H / 2 + 15}
+                  textAnchor="middle"
+                  fill={tooFew ? 'rgba(255,80,80,0.6)' : 'rgba(255,255,255,0.45)'}
+                  fontSize={8}
+                >
+                  {nTrades} trade{nTrades !== 1 ? 's' : ''}{tooFew ? ' ⚠' : ''}
+                </text>
               </g>
             )
           })
         )}
       </svg>
       <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-muted)', marginTop: 'var(--space-2)', textAlign: 'center' }}>
-        Cell colour = Sharpe ratio. Click a cell to load those parameters into the Lab.
+        Cell colour = Sharpe ratio. Faded cells (⚠ &lt;5 trades) are statistically unreliable — click a solid cell to load params into the Lab.
       </p>
     </div>
   )

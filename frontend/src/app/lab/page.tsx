@@ -1,18 +1,52 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useAgents } from '@/hooks/useAgents'
+import { api } from '@/lib/api'
 import AgentBuilder from '@/components/lab/AgentBuilder'
 import TrainingPanel from '@/components/lab/TrainingPanel'
 import SetupTester from '@/components/lab/SetupTester'
 import Modal from '@/components/ui/Modal'
 import type { Agent } from '@/types'
 
-export default function LabPage() {
+function LabPageInner() {
   const { agents, refresh } = useAgents()
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
   const [labTab,        setLabTab]        = useState<'build' | 'train' | 'setup'>('build')
   const [editOpen,      setEditOpen]      = useState(false)
+  const [sweepBanner,   setSweepBanner]   = useState<string | null>(null)
+
+  const searchParams = useSearchParams()
+
+  // Apply sweep params if navigated from Intelligence page
+  useEffect(() => {
+    const agentId    = searchParams.get('agent_id')
+    const horizon    = searchParams.get('horizon')
+    const threshold  = searchParams.get('threshold')
+    const trainWin   = searchParams.get('train_window')
+    if (!agentId || !horizon || !threshold || !trainWin) return
+
+    const apply = async () => {
+      await refresh()
+      setLabTab('train')
+      try {
+        await api.agents.update(agentId, {
+          target_horizon:    Number(horizon),
+          target_threshold:  Number(threshold),
+          train_window:      Number(trainWin),
+        })
+        await refresh()
+        setSweepBanner(
+          `Sweep params applied — horizon ${horizon}, threshold ${(Number(threshold) * 100).toFixed(2)}%, window ${trainWin}. Retrain to use them.`
+        )
+      } catch {
+        setSweepBanner('Could not apply sweep params — select the agent manually and edit its config.')
+      }
+    }
+    apply()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleCreated = async (agentId: string) => {
     await refresh()
@@ -32,6 +66,14 @@ export default function LabPage() {
     refresh()
   }
 
+  // Auto-select agent from URL param once agents list loads
+  useEffect(() => {
+    const agentId = searchParams.get('agent_id')
+    if (!agentId || selectedAgent) return
+    const found = agents.find((a) => a.id === agentId)
+    if (found) setSelectedAgent(found)
+  }, [agents, searchParams])
+
   // Keep selectedAgent in sync with fresh agent data from the list
   const liveAgent = selectedAgent
     ? (agents.find((a) => a.id === selectedAgent.id) ?? selectedAgent)
@@ -39,6 +81,24 @@ export default function LabPage() {
 
   return (
     <div>
+      {sweepBanner && (
+        <div style={{
+          marginBottom: 'var(--space-4)',
+          padding: 'var(--space-3) var(--space-4)',
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-gold)',
+          borderRadius: 'var(--radius-lg)',
+          fontSize: 'var(--text-sm)',
+          color: 'var(--color-gold)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 'var(--space-3)',
+        }}>
+          <span>✓ {sweepBanner}</span>
+          <button className="btn btn--ghost btn--sm" onClick={() => setSweepBanner(null)}>×</button>
+        </div>
+      )}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-6)' }}>
         <div>
           <h2 style={{ margin: 0 }}>Lab</h2>
@@ -266,5 +326,13 @@ export default function LabPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function LabPage() {
+  return (
+    <Suspense>
+      <LabPageInner />
+    </Suspense>
   )
 }

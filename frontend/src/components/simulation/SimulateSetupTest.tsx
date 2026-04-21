@@ -58,7 +58,7 @@ export default function SimulateSetupTest({ agents, agentId, onAgentChange }: Pr
         min_confidence:    minConf,
         start_date:        startDate || undefined,
         end_date:          endDate   || undefined,
-      }) as Result
+      }) as unknown as Result
       setResult(r)
     } catch (err) {
       setError(String(err))
