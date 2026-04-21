@@ -7,6 +7,7 @@ import { fmtDateMs } from '@/lib/formatters'
 import type { Pattern, RegimePoint, SweepCell, FeatureIC } from '@/types'
 import ParameterHeatmap from '@/components/intelligence/ParameterHeatmap'
 import Button from '@/components/ui/Button'
+import { useSignalSocket } from '@/hooks/useSignalSocket'
 
 const REGIME_COLOR: Record<string, string> = {
   LOW:  'var(--color-bull)',
@@ -34,6 +35,9 @@ export default function IntelligencePage() {
   const [sweepAgentId, setSweepAgentId] = useState('')
   const [sweepCells,   setSweepCells]   = useState<SweepCell[]>([])
   const [sweeping,     setSweeping]     = useState(false)
+  const [sweepPct,     setSweepPct]     = useState(0)
+  const [sweepError,   setSweepError]   = useState('')
+  const [sweepStatus,  setSweepStatus]  = useState('')  // e.g. "12 / 32"
 
   // Miner
   const [minerTf,       setMinerTf]       = useState('1d')
@@ -53,20 +57,37 @@ export default function IntelligencePage() {
     }).catch(() => {})
   }, [patternTf])
 
+  useSignalSocket((e) => {
+    if (e.event === 'sweep_progress') {
+      const { pct, completed, total } = e.data as { pct: number; completed: number; total: number }
+      setSweepPct(pct)
+      setSweepStatus(`${completed} / ${total}`)
+    }
+    if (e.event === 'sweep_complete') {
+      const { cells } = e.data as { cells: SweepCell[] }
+      setSweepCells(cells)
+      setSweepPct(100)
+      setSweeping(false)
+    }
+  })
+
   const handleSweep = async () => {
     if (!sweepAgentId) return
     setSweeping(true)
+    setSweepError('')
+    setSweepCells([])
+    setSweepPct(0)
+    setSweepStatus('')
     try {
-      const cells = await api.intelligence.sweep({
+      await api.intelligence.sweep({
         agent_id: sweepAgentId,
         horizons: [3, 5, 7, 10],
         thresholds: [0.001, 0.002, 0.003, 0.005],
         train_windows: [300, 500],
       })
-      setSweepCells(cells)
+      // Results arrive via sweep_complete WebSocket event
     } catch (err) {
-      console.error(err)
-    } finally {
+      setSweepError(String(err))
       setSweeping(false)
     }
   }
@@ -173,7 +194,7 @@ export default function IntelligencePage() {
       {tab === 'patterns' && (
         <div className="card">
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
-            <h3 style={{ margin: 0 }}>Pattern Timeline — GC=F</h3>
+            <h3 style={{ margin: 0 }}>Pattern Timeline — XAUUSD</h3>
             <select className="select" value={patternTf} onChange={(e) => setPatternTf(e.target.value)}>
               {['5m', '15m', '30m', '1h', '2h', '4h', '1d'].map((tf) => (
                 <option key={tf} value={tf}>{tf}</option>
@@ -280,10 +301,39 @@ export default function IntelligencePage() {
                 {agents.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
             </div>
-            <Button variant="primary" loading={sweeping} onClick={handleSweep} disabled={!sweepAgentId}>
+          <Button variant="primary" loading={sweeping} onClick={handleSweep} disabled={!sweepAgentId}>
               Run Sweep
             </Button>
           </div>
+
+          {/* Progress bar */}
+          {sweeping && (
+            <div style={{ marginBottom: 'var(--space-4)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--space-1)', fontSize: 'var(--text-xs)', color: 'var(--color-muted)' }}>
+                <span>Running combinations…</span>
+                <span className="mono">{sweepStatus || '—'}</span>
+              </div>
+              <div style={{ height: 6, borderRadius: 99, background: 'var(--color-surface-2)', overflow: 'hidden' }}>
+                <div
+                  style={{
+                    height: '100%',
+                    width: `${sweepPct}%`,
+                    background: 'var(--color-gold)',
+                    borderRadius: 99,
+                    transition: 'width 0.4s ease',
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Error */}
+          {sweepError && (
+            <p style={{ color: 'var(--color-bear)', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-4)' }}>
+              {sweepError}
+            </p>
+          )}
+
           <ParameterHeatmap
             cells={sweepCells}
             onSelect={(cell) => {

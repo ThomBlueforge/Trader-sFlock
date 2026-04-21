@@ -63,12 +63,26 @@ export default function HomePage() {
     }
   }, []))
 
-  // Chart markers: only signals matching current timeframe
-  const chartSignals = latestSignals.filter(s => s.timeframe === timeframe)
-  // Panel: ALL active-agent signals sorted by confidence
-  const panelSignals = [...latestSignals].sort((a, b) => b.confidence - a.confidence)
-  const activeAgents = agents.filter(a => a.status === 'active')
-  const noSignalYet  = activeAgents.filter(a => !latestSignals.find(s => s.agent_id === a.id))
+  const activeAgents   = agents.filter(a => a.status === 'active')
+
+  // Only signals from currently active agents — one per agent (latest ts)
+  const activeAgentIds = new Set(activeAgents.map(a => a.id))
+  const activeSignals = Array.from(
+    latestSignals
+      .filter(s => activeAgentIds.has(s.agent_id))
+      .reduce((map, s) => {
+        const prev = map.get(s.agent_id)
+        if (!prev || s.ts > prev.ts) map.set(s.agent_id, s)
+        return map
+      }, new Map<string, SignalOut>())
+      .values()
+  )
+
+  // Chart markers: active-agent signals matching current timeframe
+  const chartSignals = activeSignals.filter(s => s.timeframe === timeframe)
+  // Panel: active-agent signals sorted by confidence
+  const panelSignals = [...activeSignals].sort((a, b) => b.confidence - a.confidence)
+  const noSignalYet  = activeAgents.filter(a => !activeSignals.find(s => s.agent_id === a.id))
 
   const currentPrice = candles.length > 0 ? candles[candles.length - 1].close : null
 
@@ -79,7 +93,7 @@ export default function HomePage() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)', marginBottom: 'var(--space-4)', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-3)' }}>
-          <span style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--color-gold)' }}>GC=F</span>
+          <span style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, color: 'var(--color-gold)' }}>XAUUSD</span>
           {currentPrice != null && (
             <span style={{ fontSize: 'var(--text-xl)', fontFamily: 'var(--font-mono), monospace' }}>
               ${currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -123,7 +137,7 @@ export default function HomePage() {
               color: 'var(--color-muted)', border: '1px solid var(--color-border)' }}
               className="animate-pulse">Loading chart…</div>
           ) : (
-            <CandleChart candles={candles} agents={agents} signals={chartSignals} />
+            <CandleChart candles={candles} agents={agents} signals={chartSignals} timeframe={timeframe} />
           )}
           {!candlesLoading && candles.length > 0 && chartSignals.length === 0 && panelSignals.length > 0 && (
             <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-muted)', marginTop: 'var(--space-2)', textAlign: 'center' }}>

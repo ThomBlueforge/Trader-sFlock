@@ -14,7 +14,7 @@ from __future__ import annotations
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Query
 
 from app.core.config import settings
 from app.core.database import get_connection
@@ -91,8 +91,13 @@ async def get_pattern_stats(timeframe: str = Query("1d")) -> list[PatternStatsOu
 # ── Parameter sweep ────────────────────────────────────────────────────────────
 
 @router.post("/sweep")
-async def parameter_sweep(body: SweepRequest) -> list[SweepCell]:
+async def parameter_sweep(
+    body: SweepRequest,
+    background_tasks: BackgroundTasks,
+) -> dict:
     from app.agents.registry import get_agent
+    from app.api.ws import manager
+
     agent = await asyncio.to_thread(get_agent, body.agent_id)
     if agent is None:
         raise HTTPException(status_code=404, detail="Agent not found")
@@ -105,6 +110,7 @@ async def parameter_sweep(body: SweepRequest) -> list[SweepCell]:
         for t  in body.thresholds
         for tw in body.train_windows
     ]
+    total = len(combos)
 
     def _run_one(horizon: int, threshold: float, train_window: int) -> SweepCell:
         try:
@@ -133,12 +139,34 @@ async def parameter_sweep(body: SweepRequest) -> list[SweepCell]:
                 error=str(exc),
             )
 
-    loop = asyncio.get_running_loop()
-    with ThreadPoolExecutor(max_workers=4) as pool:
-        futures = [loop.run_in_executor(pool, _run_one, *c) for c in combos]
-        cells = list(await asyncio.gather(*futures))
+    async def _run_sweep() -> None:
+        loop = asyncio.get_running_loop()
+        completed = 0
+        lock = asyncio.Lock()
 
-    return cells
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            async def _run_and_report(combo: tuple) -> SweepCell:
+                nonlocal completed
+                h, t, tw = combo
+                cell = await loop.run_in_executor(pool, _run_one, h, t, tw)
+                async with lock:
+                    completed += 1
+                    pct = round(completed / total * 100)
+                await manager.broadcast(
+                    "sweep_progress",
+                    {"pct": pct, "completed": completed, "total": total},
+                )
+                return cell
+
+            cells = list(await asyncio.gather(*[_run_and_report(c) for c in combos]))
+
+        await manager.broadcast(
+            "sweep_complete",
+            {"cells": [c.model_dump() for c in cells]},
+        )
+
+    background_tasks.add_task(_run_sweep)
+    return {"status": "started", "total": total}
 
 
 # ── Correlation miner ──────────────────────────────────────────────────────────

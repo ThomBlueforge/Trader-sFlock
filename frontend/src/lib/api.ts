@@ -151,7 +151,7 @@ export const api = {
       fetch(`${BASE}/api/intelligence/pattern_stats?timeframe=${timeframe}`).then(json),
 
     sweep: (body: unknown) =>
-      post(`${BASE}/api/intelligence/sweep`, body),
+      post(`${BASE}/api/intelligence/sweep`, body, 300_000), // 5-min timeout
 
     mineCorrelations: (timeframe = '1d', horizon = 5, threshold = 0.003) =>
       post(`${BASE}/api/intelligence/mine_correlations?timeframe=${timeframe}&horizon=${horizon}&threshold=${threshold}`),

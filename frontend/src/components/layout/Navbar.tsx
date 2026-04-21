@@ -56,7 +56,7 @@ export default function Navbar() {
             display: 'inline-block',
           }}
         />
-        GC=F
+        XAUUSD
       </div>
     </nav>
   )

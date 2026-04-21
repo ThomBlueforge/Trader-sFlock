@@ -3,126 +3,128 @@
 import { useEffect, useRef } from 'react'
 import type { Candle, SignalOut, Agent } from '@/types'
 
+const TF_MAP: Record<string, string> = {
+  '5m':  '5',
+  '15m': '15',
+  '30m': '30',
+  '1h':  '60',
+  '2h':  '120',
+  '4h':  '240',
+  '1d':  'D',
+}
+
 interface CandleChartProps {
-  candles: Candle[]
+  candles?: Candle[]
   agents?: Agent[]
   signals?: SignalOut[]
   height?: number
+  timeframe?: string
 }
 
 export default function CandleChart({
-  candles,
   agents = [],
   signals = [],
   height = 480,
+  timeframe = '1d',
 }: CandleChartProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const chartRef = useRef<ReturnType<typeof import('lightweight-charts')['createChart']> | null>(null)
-  const seriesRef = useRef<ReturnType<ReturnType<typeof import('lightweight-charts')['createChart']>['addCandlestickSeries']> | null>(null)
+  const widgetRef    = useRef<unknown>(null)
 
-  // Create chart once
+  const colorMap: Record<string, string> = {}
+  agents.forEach((a) => { colorMap[a.id] = a.color })
+
   useEffect(() => {
     if (!containerRef.current) return
 
-    const { createChart } = require('lightweight-charts') as typeof import('lightweight-charts')
+    // Remove previous widget
+    containerRef.current.innerHTML = ''
 
-    const chart = createChart(containerRef.current, {
-      width: containerRef.current.clientWidth,
-      height,
-      layout: {
-        background: { color: '#0e0f14' },
-        textColor: '#888880',
-      },
-      grid: {
-        vertLines: { color: '#2a2c37' },
-        horzLines: { color: '#2a2c37' },
-      },
-      crosshair: { mode: 1 },
-      rightPriceScale: {
-        borderColor: '#2a2c37',
-      },
-      timeScale: {
-        borderColor: '#2a2c37',
-        timeVisible: true,
-        secondsVisible: false,
-      },
-    })
+    const interval = TF_MAP[timeframe] ?? 'D'
 
-    const series = chart.addCandlestickSeries({
-      upColor:         '#22c55e',
-      downColor:       '#ef4444',
-      borderUpColor:   '#22c55e',
-      borderDownColor: '#ef4444',
-      wickUpColor:     '#22c55e',
-      wickDownColor:   '#ef4444',
-    })
-
-    chartRef.current  = chart
-    seriesRef.current = series
-
-    // Resize observer
-    const ro = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const { width } = entry.contentRect
-        chart.applyOptions({ width })
-      }
-    })
-    ro.observe(containerRef.current)
+    const script = document.createElement('script')
+    script.src = 'https://s3.tradingview.com/tv.js'
+    script.async = true
+    script.onload = () => {
+      if (!containerRef.current) return
+      // @ts-ignore
+      widgetRef.current = new window.TradingView.widget({
+        autosize:          true,
+        symbol:            'OANDA:XAUUSD',
+        interval,
+        timezone:          'Etc/UTC',
+        theme:             'dark',
+        style:             '1',
+        locale:            'en',
+        toolbar_bg:        '#0e0f14',
+        enable_publishing: false,
+        hide_side_toolbar: false,
+        allow_symbol_change: false,
+        container_id:      containerRef.current.id,
+      })
+    }
+    containerRef.current.appendChild(script)
 
     return () => {
-      ro.disconnect()
-      chart.remove()
-      chartRef.current  = null
-      seriesRef.current = null
+      if (containerRef.current) containerRef.current.innerHTML = ''
     }
-  }, [height])
-
-  // Update candle data
-  useEffect(() => {
-    if (!seriesRef.current || candles.length === 0) return
-
-    const data = candles.map((c) => ({
-      time: (c.ts / 1000) as unknown as import('lightweight-charts').Time,
-      open: c.open,
-      high: c.high,
-      low:  c.low,
-      close: c.close,
-    }))
-
-    seriesRef.current.setData(data)
-    chartRef.current?.timeScale().fitContent()
-  }, [candles])
-
-  // Update signal markers
-  useEffect(() => {
-    if (!seriesRef.current) return
-
-    // Build a color lookup from agents
-    const colorMap: Record<string, string> = {}
-    agents.forEach((a) => { colorMap[a.id] = a.color })
-
-    const markers = signals
-      .map((sig) => ({
-        time: sig.ts as unknown as import('lightweight-charts').Time,
-        position: sig.signal === 'BULL' ? ('belowBar' as const) : ('aboveBar' as const),
-        color: colorMap[sig.agent_id] ?? '#d4af37',
-        shape: sig.signal === 'BULL' ? ('arrowUp' as const) : ('arrowDown' as const),
-      }))
-      .sort((a, b) => (a.time as number) - (b.time as number))
-
-    seriesRef.current.setMarkers(markers)
-  }, [signals, agents])
+  }, [timeframe, height])
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        width: '100%',
-        height,
-        borderRadius: 'var(--radius-lg)',
-        overflow: 'hidden',
-        border: '1px solid var(--color-border)',
-      }}
-    />
+    <div style={{ position: 'relative', width: '100%', height }}>
+      <div
+        id="tv_chart_container"
+        ref={containerRef}
+        style={{
+          width: '100%',
+          height: '100%',
+          borderRadius: 'var(--radius-lg)',
+          overflow: 'hidden',
+          border: '1px solid var(--color-border)',
+        }}
+      />
+
+      {/* Signal badges overlay */}
+      {signals.length > 0 && (
+        <div style={{
+          position: 'absolute',
+          top: 12,
+          left: 12,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 6,
+          pointerEvents: 'none',
+          zIndex: 10,
+        }}>
+          {signals.map((sig) => {
+            const isBull = sig.signal === 'BULL'
+            const color  = colorMap[sig.agent_id] ?? '#d4af37'
+            const agent  = agents.find((a) => a.id === sig.agent_id)
+            return (
+              <div key={sig.agent_id} style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                background: 'rgba(14,15,20,0.82)',
+                border: `1px solid ${color}55`,
+                borderRadius: 6,
+                padding: '4px 8px',
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                backdropFilter: 'blur(4px)',
+              }}>
+                <span style={{ color, fontSize: '0.65rem' }}>{isBull ? '▲' : '▼'}</span>
+                <span style={{ color: 'var(--color-muted)' }}>{agent?.name ?? 'Agent'}</span>
+                <span style={{ color: isBull ? '#22c55e' : '#ef4444' }}>
+                  {isBull ? 'BUY' : 'SELL'}
+                </span>
+                <span style={{ color: `${(sig.confidence * 100).toFixed(0)}% >= 70` ? '#d4af37' : 'var(--color-muted)', fontSize: '0.62rem' }}>
+                  {(sig.confidence * 100).toFixed(0)}%
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
   )
 }
