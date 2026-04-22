@@ -141,27 +141,31 @@ def _decode_bi5(raw: bytes, hour_ms: int) -> list[tuple]:
     return out
 
 
-def _fetch_hour(y: int, m: int, d: int, h: int, retries: int = 3) -> list[tuple]:
+def _fetch_hour(y: int, m: int, d: int, h: int, retries: int = 4) -> list[tuple]:
     """Download one hour of ticks ([] = weekend / holiday)."""
     url = f"{BASE_URL}/{y:04d}/{m-1:02d}/{d:02d}/{h:02d}h_ticks.bi5"
+    raw: bytes | None = None
     for attempt in range(retries):
         try:
-            r = _session.get(url, timeout=20)
+            r = _session.get(url, timeout=(10, 45))  # (connect, read)
             if r.status_code == 404 or len(r.content) == 0:
                 return []
             if r.status_code != 200:
                 if attempt < retries - 1:
-                    time.sleep(1.5 ** attempt)
+                    time.sleep(2 ** attempt)  # 1s, 2s, 4s
                     continue
                 return []
             raw = lzma.decompress(r.content)
             break
         except Exception as exc:
             if attempt < retries - 1:
-                time.sleep(1.5 ** attempt)
+                wait = 2 ** attempt  # 1s, 2s, 4s
+                time.sleep(wait)
                 continue
             _add_log("WARN", f"{y}-{m:02d}-{d:02d} {h:02d}h failed: {exc}")
             return []
+    if raw is None:
+        return []
     hour_ms = int(datetime(y, m, d, h, tzinfo=timezone.utc).timestamp() * 1000)
     return _decode_bi5(raw, hour_ms)
 
@@ -264,6 +268,9 @@ def _phase1(tick_conn: sqlite3.Connection, start: datetime, end: datetime,
         if _stop.is_set():
             return 0
         y, m, d, h = args
+        # Small random jitter to spread requests across threads
+        import random
+        time.sleep(random.uniform(0.05, 0.3))
         rows = _fetch_hour(y, m, d, h)
         if rows:
             _insert_ticks(tick_conn, db_lock, rows)
@@ -395,7 +402,7 @@ def start_job(
     start_date:  str,
     end_date:    str,
     symbol:      str       = "GC=F",
-    concurrency: int       = 12,
+    concurrency: int       = 6,
     timeframes:  list[str] = None,
     loop: asyncio.AbstractEventLoop = None,
 ) -> None:
