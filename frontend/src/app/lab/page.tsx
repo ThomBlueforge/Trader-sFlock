@@ -7,17 +7,28 @@ import { api } from '@/lib/api'
 import AgentBuilder from '@/components/lab/AgentBuilder'
 import TrainingPanel from '@/components/lab/TrainingPanel'
 import SetupTester from '@/components/lab/SetupTester'
+import HistoricalImport from '@/components/data/HistoricalImport'
 import Modal from '@/components/ui/Modal'
 import type { Agent } from '@/types'
 
 function LabPageInner() {
   const { agents, refresh } = useAgents()
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
-  const [labTab,        setLabTab]        = useState<'build' | 'train' | 'setup'>('build')
+  const [labTab,        setLabTab]        = useState<'data' | 'build' | 'train' | 'setup'>('data')
+  const [tfData,         setTfData]         = useState<Record<string, number>>({}) // tf → bar_count
   const [editOpen,      setEditOpen]      = useState(false)
   const [sweepBanner,   setSweepBanner]   = useState<string | null>(null)
 
   const searchParams = useSearchParams()
+
+  // Load TF data readiness for badges
+  useEffect(() => {
+    api.historicalImport.summary().then(s => {
+      const counts: Record<string, number> = {}
+      Object.entries(s).forEach(([tf, info]) => { counts[tf] = info.bar_count })
+      setTfData(counts)
+    }).catch(() => {})
+  }, [])
 
   // Apply sweep params if navigated from Intelligence page
   useEffect(() => {
@@ -29,7 +40,7 @@ function LabPageInner() {
 
     const apply = async () => {
       await refresh()
-      setLabTab('train')
+      setLabTab('train' as 'train')
       try {
         await api.agents.update(agentId, {
           target_horizon:    Number(horizon),
@@ -102,23 +113,37 @@ function LabPageInner() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 'var(--space-6)' }}>
         <div>
           <h2 style={{ margin: 0 }}>Lab</h2>
-          <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--color-muted)', marginTop: 'var(--space-1)' }}>
-            Build, train, and test ML signal agents.
+          <p style={{ margin: '4px 0 0', fontSize: 'var(--text-sm)', color: 'var(--color-muted)' }}>
+            Follow the tabs in order: <strong style={{ color: 'var(--color-text)' }}>0. Import data</strong> → <strong style={{ color: 'var(--color-text)' }}>1. Build</strong> an agent → <strong style={{ color: 'var(--color-text)' }}>2. Train</strong> it → <strong style={{ color: 'var(--color-text)' }}>3. Setup Test</strong> with custom SL/TP rules.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 'var(--space-1)' }}>
-          {(['build', 'train', 'setup'] as const).map((t) => (
+        <div style={{ display: 'flex', gap: 'var(--space-1)', flexWrap: 'wrap' }}>
+          {([
+            { key: 'data',  label: '0. Data' },
+            { key: 'build', label: '1. Build' },
+            { key: 'train', label: '2. Train' },
+            { key: 'setup', label: '3. Setup Test' },
+          ] as const).map(({ key, label }) => (
             <button
-              key={t}
-              className={`btn btn--sm ${labTab === t ? 'btn--primary' : 'btn--ghost'}`}
-              onClick={() => setLabTab(t)}
-              style={{ textTransform: 'capitalize' }}
+              key={key}
+              className={`btn btn--sm ${labTab === key ? 'btn--primary' : 'btn--ghost'}`}
+              onClick={() => setLabTab(key)}
             >
-              {t === 'build' ? '1. Build' : t === 'train' ? '2. Train' : '3. Setup Test'}
+              {label}
+              {key === 'data' && Object.values(tfData).some(n => n > 0) && (
+                <span style={{ marginLeft: 4, width: 6, height: 6, borderRadius: '50%', background: 'var(--color-bull)', display: 'inline-block', verticalAlign: 'middle' }} />
+              )}
             </button>
           ))}
         </div>
       </div>
+
+      {/* ── Tab: Data ──────────────────────────────────────────────────── */}
+      {labTab === 'data' && (
+        <div className="card">
+          <HistoricalImport />
+        </div>
+      )}
 
       {/* ── Tab: Build ─────────────────────────────────────────────────── */}
       {labTab === 'build' && <div

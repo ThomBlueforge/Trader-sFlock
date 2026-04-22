@@ -88,7 +88,7 @@ export default function CandleChart({
         <div style={{
           position: 'absolute',
           top: 12,
-          left: 12,
+          right: 50,
           display: 'flex',
           flexDirection: 'column',
           gap: 6,

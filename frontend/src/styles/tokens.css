@@ -1,21 +1,26 @@
 :root {
-  /* ── Colours ────────────────────────────────────────────────────────────── */
-  --color-bg:        oklch(8% 0.01 265);
-  --color-surface:   oklch(12% 0.012 265);
-  --color-surface-2: oklch(16% 0.018 265);
-  --color-border:    oklch(22% 0.015 265);
-  --color-gold:      oklch(72% 0.14 85);
-  --color-gold-dim:  oklch(50% 0.08 85);
-  --color-bull:      oklch(65% 0.18 145);
-  --color-bear:      oklch(60% 0.20 25);
-  --color-text:      oklch(92% 0.01 85);
-  --color-muted:     oklch(55% 0.02 85);
+  /* ── Colours ──────────────────────────────────────────── */
+  /* Deep navy-slate dark theme — real chroma so surfaces look distinguished */
+  --color-bg:          oklch(10% 0.028 258);
+  --color-surface:     oklch(15% 0.038 258);
+  --color-surface-2:   oklch(20% 0.044 258);
+  --color-surface-3:   oklch(25% 0.048 258);
+  --color-border:      oklch(31% 0.038 258);
+  --color-border-dim:  oklch(22% 0.03 258);
+  --color-gold:        oklch(73% 0.15 85);
+  --color-gold-dim:    oklch(52% 0.09 85);
+  --color-gold-subtle: oklch(73% 0.15 85 / 0.09);
+  --color-bull:        oklch(66% 0.19 145);
+  --color-bear:        oklch(61% 0.21 25);
+  --color-text:        oklch(94% 0.012 85);
+  --color-muted:       oklch(58% 0.028 85);
 
   /* ── Spacing ────────────────────────────────────────────────────────────── */
   --space-1:  0.25rem;
   --space-2:  0.5rem;
   --space-3:  0.75rem;
   --space-4:  1rem;
+  --space-5:  1.25rem;
   --space-6:  1.5rem;
   --space-8:  2rem;
   --space-12: 3rem;

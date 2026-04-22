@@ -4,7 +4,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const LINKS = [
-  { href: '/',             label: 'Chart'        },
+  { href: '/',             label: 'Dashboard'    },
+  { href: '/chart',        label: 'Chart'        },
   { href: '/agents',       label: 'Agents'       },
   { href: '/lab',          label: 'Lab'          },
   { href: '/portfolio',    label: 'Portfolio'    },
@@ -19,8 +20,8 @@ export default function Navbar() {
   return (
     <nav className="navbar">
       <div className="navbar__logo">
-        <span style={{ fontSize: '1.4rem' }}>◈</span>
-        StartGold
+        <span className="navbar__logo-mark">◈</span>
+        <span>Trader&rsquo;s Flock</span>
       </div>
 
       <div className="navbar__links">

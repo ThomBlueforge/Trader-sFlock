@@ -185,4 +185,24 @@ export const api = {
 
   presets: (): Promise<Agent[]> =>
     post(`${BASE}/api/agents/presets`),
+
+  historicalImport: {
+    start: (body: {
+      start_date?: string
+      end_date?: string
+      symbol?: string
+      concurrency?: number
+      timeframes?: string[]
+    }): Promise<Record<string, unknown>> =>
+      post(`${BASE}/api/data/historical/start`, body, 10_000),
+
+    status: (): Promise<Record<string, unknown>> =>
+      fetch(`${BASE}/api/data/historical/status`).then(json),
+
+    cancel: (): Promise<Record<string, unknown>> =>
+      post(`${BASE}/api/data/historical/cancel`),
+
+    summary: (symbol = 'GC=F'): Promise<Record<string, { bar_count: number; date_from: string | null; date_to: string | null; coverage: number }>> =>
+      fetch(`${BASE}/api/data/historical/summary?symbol=${symbol}`).then(json),
+  },
 }

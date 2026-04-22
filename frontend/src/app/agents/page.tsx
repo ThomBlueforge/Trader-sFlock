@@ -69,31 +69,25 @@ export default function AgentsPage() {
       >
         <div>
           <h2 style={{ margin: 0 }}>Agents</h2>
-          <p
-            style={{
-              margin: 0,
-              fontSize: 'var(--text-sm)',
-              color: 'var(--color-muted)',
-              marginTop: 'var(--space-1)',
-            }}
-          >
-            {agents.length} agent{agents.length !== 1 ? 's' : ''}
-            {' · '}
+          <p style={{ margin: '4px 0 0', fontSize: 'var(--text-sm)', color: 'var(--color-muted)' }}>
+            {agents.length} agent{agents.length !== 1 ? 's' : ''}{' · '}
             {agents.filter((a) => a.status === 'active').length} active
+            {agents.length === 0 && ' — create your first agent in the Lab'}
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+        <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
           <Button
             variant="secondary"
             size="sm"
             loading={presets}
+            title="Auto-create 5 pre-configured agents covering different timeframes and strategies"
             onClick={async () => {
               setPresets(true)
               try { await api.presets(); await refresh() } finally { setPresets(false) }
             }}
           >
-            ✨ Create 5 Presets
+            ✨ Create Presets
           </Button>
           {agents.length === 0 && (
             <Button

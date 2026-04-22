@@ -45,18 +45,23 @@ export default function PortfolioPage() {
     <div>
       <div style={{ marginBottom: 'var(--space-6)' }}>
         <h2 style={{ margin: 0 }}>Portfolio</h2>
-        <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--color-muted)', marginTop: 'var(--space-1)' }}>
-          Paper-trading performance for active agents.
+        <p style={{ margin: '4px 0 0', fontSize: 'var(--text-sm)', color: 'var(--color-muted)' }}>
+          Paper-trading performance for active agents. Trades are simulated in real-time using live signals — no real money involved.
+          Each agent starts with $10,000 of virtual capital.
         </p>
       </div>
 
       {activeAgents.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', padding: 'var(--space-16)', color: 'var(--color-muted)' }}>
-          <p>No active agents yet.</p>
-          <p style={{ marginTop: 'var(--space-2)', fontSize: 'var(--text-sm)' }}>
-            <a href="/lab">Train an agent in the Lab</a> then{' '}
-            <a href="/agents">activate it on the Agents page</a>.
+        <div className="card" style={{ textAlign: 'center', padding: 'var(--space-12)', color: 'var(--color-muted)' }}>
+          <span style={{ fontSize: '2rem', display: 'block', marginBottom: 'var(--space-3)', opacity: 0.3 }}>📈</span>
+          <p style={{ fontWeight: 600, color: 'var(--color-text)', marginBottom: 'var(--space-2)' }}>No active agents yet</p>
+          <p style={{ fontSize: 'var(--text-sm)', lineHeight: 1.6, maxWidth: 400, margin: '0 auto var(--space-4)' }}>
+            To see portfolio performance here, you need at least one active agent generating live signals.
           </p>
+          <div style={{ display: 'flex', gap: 'var(--space-3)', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <a href="/lab" style={{ color: 'var(--color-gold)', fontSize: 'var(--text-sm)' }}>1. Go to Lab to build &amp; train →</a>
+            <a href="/agents" style={{ color: 'var(--color-gold)', fontSize: 'var(--text-sm)' }}>2. Activate on Agents page →</a>
+          </div>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>

@@ -21,8 +21,8 @@ const mono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'StartGold — Gold Signal Platform',
-  description: 'Multi-timeframe ML signal agents for gold futures (GC=F)',
+  title: "Trader's Flock — Gold Signal Intelligence",
+  description: 'Multi-timeframe ML signal agents for gold (XAUUSD). Built for precision, coordinated by design.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

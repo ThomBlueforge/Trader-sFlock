@@ -83,7 +83,8 @@ export default function AssistantPage() {
       <div style={{ marginBottom: 'var(--space-6)' }}>
         <h2 style={{ margin: 0 }}>AI Strategy Assistant</h2>
         <p style={{ margin: '4px 0 0', fontSize: 'var(--text-sm)', color: 'var(--color-muted)' }}>
-          Describe a strategy in natural language. Claude will configure it for you.
+          Describe a trading idea in plain language. The assistant will suggest the right features, model,
+          timeframe, and parameters — then you can open the result directly in the Lab.
         </p>
       </div>
 

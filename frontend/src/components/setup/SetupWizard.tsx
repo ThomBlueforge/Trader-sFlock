@@ -18,24 +18,26 @@ function DataScreen({ onNext }: { onNext: () => void }) {
       .finally(() => setLoading(false))
   }, [])
 
-  const gcBars = symbols['GC=F'] ?? {}
-  const loaded = Object.values(gcBars).some((v) => v > 0)
+  // GC=F is the internal symbol key the backend uses for XAUUSD candle data
+  const xauBars = symbols['GC=F'] ?? symbols['XAU_USD'] ?? {}
+  const loaded = Object.values(xauBars).some((v) => v > 0) ||
+    Object.values(symbols).some(tfBars => Object.values(tfBars).some(v => v > 0))
 
   return (
     <div>
       <h3 style={{ margin: '0 0 var(--space-4)' }}>Loading Market Data</h3>
       {loading ? (
-        <p className="text-muted animate-pulse">Fetching gold and macro data from Yahoo Finance…</p>
+          <p className="text-muted animate-pulse">Connecting to OANDA and fetching XAUUSD data…</p>
       ) : loaded ? (
         <div>
           <p style={{ color: 'var(--color-bull)', marginBottom: 'var(--space-4)' }}>
             ✓ Market data loaded successfully
           </p>
           <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap', marginBottom: 'var(--space-4)' }}>
-            {Object.entries(gcBars).map(([tf, count]) => (
+            {Object.entries(xauBars).map(([tf, count]) => (
               <div key={tf} className="stat-box" style={{ minWidth: 80 }}>
                 <div className="stat-label">{tf}</div>
-                <div className="stat-value" style={{ fontSize: 'var(--text-base)' }}>{count}</div>
+                <div className="stat-value" style={{ fontSize: 'var(--text-base)' }}>{count as number}</div>
               </div>
             ))}
           </div>
@@ -185,7 +187,7 @@ export default function SetupWizard() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', marginBottom: 'var(--space-6)' }}>
             <span style={{ fontSize: '1.6rem' }}>◈</span>
             <span style={{ fontSize: 'var(--text-xl)', fontWeight: 700, color: 'var(--color-gold)' }}>
-              Welcome to StartGold
+              Welcome to Trader’s Flock
             </span>
           </div>
         </div>

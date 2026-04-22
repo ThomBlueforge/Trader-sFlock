@@ -7,6 +7,7 @@ import FeatureSelector from './FeatureSelector'
 import HyperparamPanel from './HyperparamPanel'
 import InlineAgentChat from './InlineAgentChat'
 import Button from '@/components/ui/Button'
+import DataWindowPicker from '@/components/data/DataWindowPicker'
 
 // Slider with tooltip — reused for Step 4
 function Slider({ label, value, min, max, step, onChange, display, tooltip }: {
@@ -300,22 +301,12 @@ export default function AgentBuilder({ onCreated, onUpdated, editAgent }: AgentB
             tooltip={`The minimum price move required to label a bar as BULL or SHORT. E.g., 0.3% on 1d = gold must rise at least 0.3% over the next [horizon] bars to be called BULL. Too low = the model tries to predict noise. Too high = not enough BULL examples to train on. Recommended: 0.2-0.5% on 1d, 0.1-0.2% on 1h.`}
           />
 
-          <div className="field">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 'var(--space-2)' }}>
-              <label className="field-label" style={{ marginBottom: 0 }}>Training Window (bars)</label>
-              <span className="feature-wrap" style={{ display: 'inline-block' }}>
-                <span style={{ fontSize: '0.6rem', color: 'var(--color-gold-dim)', cursor: 'default' }}>&#9432;</span>
-                <div className="feature-tooltip" style={{ minWidth: 260, maxWidth: 340 }}>
-                  <div className="feature-tooltip__name">Training Window</div>
-                  <div className="feature-tooltip__desc">How many bars of history the model trains on before being tested on new data. 500 bars on 1d = ~2 years of history. Too few = the model doesn't see enough market regimes. Too many = older data may not be relevant to current conditions. Recommended: 400-600 on 1d, 200-400 on 1h, 150-300 on 15m.</div>
-                </div>
-              </span>
-            </div>
-            <input type="number" className="input" min={100} max={5000}
-              value={form.train_window}
-              onChange={(e) => set('train_window', parseInt(e.target.value) || 500)}
-              style={{ width: 120 }} />
-          </div>
+          <DataWindowPicker
+            timeframe={form.timeframe}
+            value={form.train_window}
+            modelType={form.model_type}
+            onChange={(bars) => set('train_window', bars)}
+          />
 
           <Slider
             label="Position Size"
